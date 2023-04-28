@@ -1,0 +1,17 @@
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf
+    ports:
+      - 13378:80
+    volumes:
+      # - ./audiobooks:/audiobooks
+      - ./metadata:/metadata
+      - ./config:/config
+    restart: unless-stopped
+    networks:
+      - default
+      - nginx-proxy-manager_default
+      
+networks:
+  nginx-proxy-manager_default:
+    external: true

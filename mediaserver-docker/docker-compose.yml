@@ -1,0 +1,380 @@
+#         _               _
+#    __ _| |__   ___  ___| |_
+#   / _` | '_ \ / _ \/ __| __/
+#  | (_| | | | | (_) \__ \ |_
+#   \__, |_| |_|\___/|___/\__|
+#   |___/      /   _ \
+#          (¯\| o (@) |/¯)
+#           \_  .___.  _/
+#            /   !_!   \
+#           /_.--._.--._\
+
+version: "3"
+
+services:
+#  wireguard:
+#    image: ghostserverd/wireguard
+#    container_name: wireguard
+#    restart: always
+#    privileged: true
+#    sysctls:
+#      - "net.ipv6.conf.all.disable_ipv6=0"
+#      - "net.ipv6.conf.default.forwarding=1"
+#      - "net.ipv6.conf.all.forwarding=1"
+#      - "net.ipv4.ip_forward=1"
+#    cap_add:
+#      - NET_ADMIN
+#      - SYS_MODULE
+#    networks:
+#      default:
+#        aliases:
+#          - nzbget
+#          - transmission
+#    ports:
+#      - "${NZBGET_PORT}:6789"
+#      - "${TRANS_WEBUI_PORT}:${TRANS_WEBUI_PORT}"
+#      # TRANS_CONNECTION_PORT may need to be port forwarded by your VPN
+#      - "${TRANS_CONNECTION_PORT}:${TRANS_CONNECTION_PORT}"
+#      - "${TRANS_CONNECTION_PORT}:${TRANS_CONNECTION_PORT}/udp"
+#    environment:
+#      - LOCAL_NETWORK=${LOCAL_NETWORK}
+#      # NETWORK_NAME is not needed unless you are mounting docker.sock to write /etc/hosts
+#      # - NETWORK_NAME=${NETWORK_NAME}
+#      # this is required unless you are mounting docker.sock to write /etc/hosts
+#      - IPTABLES_MASQ=0
+#      # space separated  list of docker service names to make addressable
+#      - SERVICE_NAMES=filebot sonarr radarr bazarr jackett heimdall tautulli plex
+#      # local TLD to use when routing DNS requests which requires aliases for each service to be addressable from within the wireguard network
+#      # - LOCAL_TLD=ghost
+#    volumes:
+#      - ${CONFIG_DIR}/wireguard:/etc/wireguard
+#      - /lib/modules:/lib/modules
+#      # this is no longer necessary but if enabled, will cause the /etc/hosts file to be written with all available services
+#      # - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  transmission:
+    image: linuxserver/transmission:version-3.00-r6
+    container_name: transmission
+    restart: unless-stopped
+    ports:
+      - "${TRANS_WEBUI_PORT}:9091"
+      - "${TRANS_CONNECTION_PORT}:51413"
+      - "${TRANS_CONNECTION_PORT}:51413/udp"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - TRANS_WEBUI_USER=${TRANS_WEBUI_USER}
+      - TRANS_WEBUI_PASS=${TRANS_WEBUI_PASS}
+      - TRANS_WEBUI_PORT=${TRANS_WEBUI_PORT}
+      - TRANS_MAX_RETENTION=${TRANS_MAX_RETENTION}
+      - TRANS_MAX_RATIO=${TRANS_MAX_RATIO}
+      - TRANS_CONNECTION_PORT=${TRANS_CONNECTION_PORT}
+      - FILEBOT_PORT=${FILEBOT_PORT}
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      - SONARR_PORT=${SONARR_PORT}
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - RADARR_PORT=${RADARR_PORT}
+    volumes:
+      - ${CONFIG_DIR}/transmission:/config
+      - ${DOWNLOAD_DIR}:/downloads
+      - ${MEDIA_DIR}:/media
+
+  # filebot:
+  #   image: rednoah/filebot
+  #   container_name: filebot
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${FILEBOT_PORT}:${FILEBOT_PORT}"
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #     - FILEBOT_PORT=${FILEBOT_PORT}
+  #     - FILEBOT_FORMAT=${FILEBOT_FORMAT}
+  #     - FILEBOT_FILTER=${FILEBOT_FILTER}
+  #     - FILEBOT_ACTION=${FILEBOT_ACTION}
+  #     - FILEBOT_CONFLICT=${FILEBOT_CONFLICT}
+  #     - FILEBOT_SERIES_DB=${FILEBOT_SERIES_DB}
+  #     - FILEBOT_ANIME_DB=${FILEBOT_ANIME_DB}
+  #     - FILEBOT_MOVIE_DB=${FILEBOT_MOVIE_DB}
+  #     - FILEBOT_MUSIC_DB=${FILEBOT_MUSIC_DB}
+  #     - OPEN_SUB_USER=${OPEN_SUB_USER}
+  #     - OPEN_SUB_PASS=${OPEN_SUB_PASS}
+  #   volumes:
+  #     - ${CONFIG_DIR}/filebot:/config
+  #     - ${DOWNLOAD_DIR}:/downloads
+  #     - ${MEDIA_DIR}:/media
+  #     - ${BASE_DIR}:/share
+
+### this is how to define the nzbget service to send all traffic through the wireguard container
+### the difference is adding network_mode and removing any port mappings
+#  nzbget:
+#    image: ghostserverd/nzbget
+#    container_name: nzbget
+#    restart: always
+#    network_mode: "service:wireguard"
+#    depends_on:
+#      - wireguard
+#    environment:
+#      - PUID=${PUID}
+#      - PGID=${PGID}
+#      - TZ=${TIMEZONE}
+#      - NZBGET_WEB_USER=${NZBGET_WEB_USER}
+#      - NZBGET_WEB_PASS=${NZBGET_WEB_PASS}
+#      - NZBGET_MAIN_DIR=${NZBGET_MAIN_DIR}
+#      - NZBGET_SCRIPT_DIR=${NZBGET_SCRIPT_DIR}
+#      - FILEBOT_PORT=${FILEBOT_PORT}
+#    volumes:
+#      - ${CONFIG_DIR}/nzbget:/config
+#      - ${DOWNLOAD_DIR}/nzb:/downloads/nzb
+
+  # nzbget:
+  #   image: ghostserverd/nzbget
+  #   container_name: nzbget
+  #   restart: always
+  #   ports:
+  #     - "${NZBGET_PORT}:6789"
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #     - NZBGET_WEB_USER=${NZBGET_WEB_USER}
+  #     - NZBGET_WEB_PASS=${NZBGET_WEB_PASS}
+  #     - NZBGET_MAIN_DIR=${NZBGET_MAIN_DIR}
+  #     - NZBGET_SCRIPT_DIR=${NZBGET_SCRIPT_DIR}
+  #     - FILEBOT_PORT=${FILEBOT_PORT}
+  #     - SONARR_API_KEY=${SONARR_API_KEY}
+  #     - SONARR_PORT=${SONARR_PORT}
+  #     - RADARR_API_KEY=${RADARR_API_KEY}
+  #     - RADARR_PORT=${RADARR_PORT}
+  #   volumes:
+  #     - ${CONFIG_DIR}/nzbget:/config
+  #     - ${DOWNLOAD_DIR}/nzb:/downloads/nzb
+
+  sonarr:
+    image: linuxserver/sonarr:3.0.9
+    container_name: sonarr
+    restart: always
+    ports:
+      - "${SONARR_PORT}:8989"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${CONFIG_DIR}/sonarr:/config
+      - ${DOWNLOAD_DIR}:/data/completed/tv/
+      - ${TV_DIR}:/tv
+
+  radarr:
+    image: linuxserver/radarr:4.2.4
+    container_name: radarr
+    restart: unless-stopped
+    ports:
+      - "${RADARR_PORT}:7878"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${CONFIG_DIR}/radarr:/config
+      - ${DOWNLOAD_DIR}:/downloads
+      - ${MOVIES_DIR}:/movies
+
+  bazarr:
+    image: linuxserver/bazarr:1.1.3
+    container_name: bazarr
+    restart: unless-stopped
+    ports:
+      - "${BAZARR_PORT}:6767"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${CONFIG_DIR}/bazarr:/config
+      - ${TV_DIR}:/tv
+      - ${MOVIES_DIR}:/movies
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${CONFIG_DIR}/prowlarr:/config
+       - ${CONFIG_DIR}/prowlarr/downloads:/downloads
+    ports:
+      - ${PROWLARR_PORT}:9696
+    restart: unless-stopped
+
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - JELLYFIN_PublishedServerUrl=192.168.31.199 #optional
+    volumes:
+      - ${CONFIG_DIR}/jellyfin:/config
+      - ${TV_DIR}:/data/tvshows
+      - ${MOVIES_DIR}:/data/movies
+    ports:
+      - ${JELLYFIN_PORT}:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+    restart: unless-stopped
+
+  # jackett:
+  #   image: linuxserver/jackett:0.20.2430
+  #   container_name: jackett
+  #   restart: always
+  #   ports:
+  #     - "${JACKETT_PORT}:9117"
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #     - JACKETT_KEY=0000
+  #   volumes:
+  #     - ${CONFIG_DIR}/jackett:/config
+  #     - ${CONFIG_DIR}/jackett/downloads:/downloads
+
+  # plex:
+  #   image: linuxserver/plex:1.30.0
+  #   container_name: plex
+  #   restart: always
+  #   ports:
+  #     - "${PLEX_WEB_PORT}:32400"
+  #     - "1900:1900"
+  #     - "3005:3005"
+  #     - "5353:5353"
+  #     - "8324:8324"
+  #     - "32410:32410"
+  #     - "32412:32412"
+  #     - "32413:32413"
+  #     - "32414:32414"
+  #     - "32469:32469"
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #     - VERSION=latest
+  #     - PLUGIN_LIST=${PLUGIN_LIST}
+  #   volumes:
+  #     - ${CONFIG_DIR}/plex:/config
+  #     - ${MEDIA_DIR}:/data
+    # devices:
+    #   - "/dev/dri/card0:/dev/dri/card0"
+    #   - "/dev/dri/renderD128:/dev/dri/renderD128"
+
+  # tautulli:
+  #   image: linuxserver/tautulli:2.11.1
+  #   container_name: tautulli
+  #   restart: always
+  #   ports:
+  #     - "${TAUTULLI_PORT}:8181"
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #   volumes:
+  #     - ${CONFIG_DIR}/tautulli:/config
+  #     - "${CONFIG_DIR}/plex/Library/Application Support/Plex Media Server/Logs:/logs:ro"
+
+  # heimdall:
+  #   image: ghostserverd/heimdall
+  #   container_name: heimdall
+  #   restart: always
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #   ports:
+  #     - "${HEIMDALL_PORT}:80"
+  #     - "${HEIMDALL_SSL_PORT}:443"
+  #   volumes:
+  #     - ${CONFIG_DIR}/heimdall:/config
+
+  # letsencrypt:
+  #   image: ghostserverd/letsencrypt
+  #   container_name: letsencrypt
+  #   ports:
+  #     - "443:443"
+  #     - "80:80"
+  #   volumes:
+  #     - ${CONFIG_DIR}/letsencrypt:/config
+  #   restart: always
+  #   depends_on:
+  #     - sonarr
+  #     - radarr
+  #     - bazarr
+  #     - nzbget
+  #     - transmission
+  #     - plex
+  #     - tautulli
+  #     - netdata
+  #     - heimdall
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #     - EMAIL=${LE_EMAIL}
+  #     - URL=${LE_HOSTNAME}
+  #     - SUBDOMAINS=${LE_SUBDOMAINS}
+  #     - NGINX_USER=${NGINX_USER}
+  #     - NGINX_PASS=${NGINX_PASS}
+
+  netdata:
+    image: netdata/netdata
+    container_name: netdata
+    hostname: ${LE_HOSTNAME}
+    ports:
+      - "${NETDATA_PORT}:19999"
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+
+  ddclient:
+    image: linuxserver/ddclient
+    container_name: ddclient
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${CONFIG_DIR}/ddclient:/config
+    restart: always
+
+  # portainer:
+  #   image: portainer/portainer-ce
+  #   container_name: portainer
+  #   restart: always
+  #   ports:
+  #     - "${PORTAINER_PORT}:9000"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - ${CONFIG_DIR}/portainer:/data
+
+  # watchtower:
+  #   image: containrrr/watchtower
+  #   container_name: watchtower
+  #   command: --cleanup
+  #   restart: always
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock

@@ -1,0 +1,69 @@
+# Docker compose file for zefhemel/mattermost-arm64:latest
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.arm64
+    # image: mattermost-arm64:latest
+    restart: ${RESTART_POLICY}
+    depends_on:
+      - postgres
+    volumes:
+      - ${MATTERMOST_CONFIG_PATH}:/mattermost/config:rw
+      - ${MATTERMOST_DATA_PATH}:/data:rw
+      - ${MATTERMOST_LOGS_PATH}:/mattermost/logs:rw
+      - ${MATTERMOST_PLUGINS_PATH}:/mattermost/plugins:rw
+      - ${MATTERMOST_CLIENT_PLUGINS_PATH}:/mattermost/client/plugins:rw
+      - ${MATTERMOST_BLEVE_INDEXES_PATH}:/mattermost/bleve-indexes:rw
+    ports:
+      - 8065:8065
+    networks:
+      - default
+      - nginx-proxy-manager_default
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 200
+    tmpfs:
+      - /tmp
+    environment:
+      # timezone inside container
+      - TZ
+
+      # necessary Mattermost options/variables (see env.example)
+      - MM_SQLSETTINGS_DRIVERNAME
+      - MM_SQLSETTINGS_DATASOURCE
+
+      # necessary for bleve
+      - MM_BLEVESETTINGS_INDEXDIR
+
+      # additional settings
+      - MM_SERVICESETTINGS_SITEURL
+
+  postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    restart: ${RESTART_POLICY}
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    read_only: true
+    networks:
+      - default
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+    volumes:
+      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
+    environment:
+      # timezone inside container
+      - TZ
+
+      # necessary Postgres options/variables
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+
+networks:
+  nginx-proxy-manager_default:
+    external: true

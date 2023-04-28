@@ -1,0 +1,24 @@
+version: "3.3"
+services:
+  homepage:
+    image: ghcr.io/benphelps/homepage:main
+    container_name: homepage
+    environment:
+      - HOMEPAGE_VAR_SERVER_IP=192.168.31.103
+    ports:
+      - 3000:3000
+    volumes:
+      - ./config:/app/config # Make sure your local config directory exists
+      - /var/run/docker.sock:/var/run/docker.sock # (optional) For docker integrations
+      - /mnt/externalhdd:/mnt/externalhdd
+      - /mnt/externalhdd2:/mnt/externalhdd2
+    networks:
+      - nginx-proxy-manager_default
+      - mediaserver-docker_default
+    restart: unless-stopped
+    
+networks:
+  nginx-proxy-manager_default:
+    external: true
+  mediaserver-docker_default:
+    external: true

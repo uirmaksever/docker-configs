@@ -1,0 +1,55 @@
+version: "3"
+services:
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      # These ports are in format <host-port>:<container-port>
+      - '80:80' # Public HTTP Port
+      - '443:443' # Public HTTPS Port
+      - '81:81' # Admin Web Port
+      # Add any other Stream port you want to expose
+      # - '21:21' # FTP
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    # Uncomment the next line if you uncomment anything in the section
+    # environment:
+      # Uncomment this if you want to change the location of 
+      # the SQLite DB file within the container
+      # DB_SQLITE_FILE: "/data/database.sqlite"
+
+      # Uncomment this if IPv6 is not enabled on your host
+      # DISABLE_IPV6: 'true'
+
+  tailscale:
+    container_name: tailscale
+    hostname: dietpi
+    image: tailscale/tailscale:stable
+    env_file:
+      - .env
+    volumes:
+      - ./tailscale:/var/lib # State data will be stored in this directory
+      - /dev/net/tun:/dev/net/tun # Required for tailscale to work
+    cap_add: # Required for tailscale to work
+      - net_admin
+      - sys_module
+    command: tailscaled
+    privileged: true
+    restart: unless-stopped
+
+
+
+  cloudflared:
+      image: cloudflare/cloudflared:latest
+      container_name: cloudflared
+      volumes:
+        - ./cloudflared-data:/etc/cloudflared
+      # command: tunnel --hostname home.umutirmaksever.me --url http://localhost:8000
+      command: tunnel --no-autoupdate run home
+      env_file:
+        - .env
+      restart: unless-stopped
+      
+
+ 

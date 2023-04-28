@@ -1,0 +1,52 @@
+# Base image
+FROM arm64v8/debian:buster-slim
+
+# Update packages and install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    file \
+    git \
+    jq \
+    libssl-dev \
+    libfontconfig1 \
+    libfreetype6 \
+    libpng-dev \
+    libjpeg-dev \
+    libpq-dev \
+    nano \
+    wget \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV MM_VERSION=7.5.2
+ENV PUID=2000
+ENV PGID=2000
+
+# Install Mattermost
+RUN wget https://github.com/SmartHoneybee/ubiquitous-memory/releases/download/v${MM_VERSION}/mattermost-v${MM_VERSION}-linux-arm64.tar.gz && \
+    tar -xzf mattermost-v${MM_VERSION}-linux-arm64.tar.gz && \
+    mv mattermost /opt/mattermost && \
+    rm mattermost-v${MM_VERSION}-linux-arm64.tar.gz
+
+# Set up Mattermost user and group
+RUN groupadd -r -g $PGID mattermost && \
+    useradd -r -u $PUID -g mattermost mattermost
+
+# Set ownership and permissions
+RUN chown -R mattermost:mattermost /opt/mattermost && \
+    chmod -R g+w /opt/mattermost
+
+# Add Mattermost config file
+# COPY config.json /opt/mattermost/config/config.json
+
+# Expose ports
+EXPOSE 8065/tcp
+EXPOSE 8067/tcp
+
+# Set the user and working directory
+USER mattermost
+WORKDIR /opt/mattermost
+
+# Start Mattermost
+CMD ["/opt/mattermost/bin/mattermost"]
