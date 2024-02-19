@@ -1,0 +1,9 @@
+name: rclone
+
+services:
+  listremotes:
+    image: rclone/rclone
+    user: 1000:1000
+    volumes:
+     - ./config:/config/rclone
+    command: config

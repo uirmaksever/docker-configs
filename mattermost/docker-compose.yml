@@ -11,14 +11,15 @@ services:
     depends_on:
       - postgres
     volumes:
-      - ${MATTERMOST_CONFIG_PATH}:/mattermost/config:rw
-      - ${MATTERMOST_DATA_PATH}:/data:rw
-      - ${MATTERMOST_LOGS_PATH}:/mattermost/logs:rw
-      - ${MATTERMOST_PLUGINS_PATH}:/mattermost/plugins:rw
-      - ${MATTERMOST_CLIENT_PLUGINS_PATH}:/mattermost/client/plugins:rw
-      - ${MATTERMOST_BLEVE_INDEXES_PATH}:/mattermost/bleve-indexes:rw
+      - ${MATTERMOST_CONFIG_PATH}:/opt/mattermost/config:rw
+      - ${MATTERMOST_DATA_PATH}:/opt/mattermost/data:rw
+      - ${MATTERMOST_LOGS_PATH}:/opt/mattermost/logs:rw
+      - ${MATTERMOST_PLUGINS_PATH}:/opt/mattermost/plugins:rw
+      - ${MATTERMOST_CLIENT_PLUGINS_PATH}:/opt/mattermost/client/plugins:rw
+      - ${MATTERMOST_BLEVE_INDEXES_PATH}:/opt/mattermost/bleve-indexes:rw
     ports:
-      - 8065:8065
+      # - 8065:8065
+      - ${APP_PORT}:${APP_PORT}
     networks:
       - default
       - nginx-proxy-manager_default

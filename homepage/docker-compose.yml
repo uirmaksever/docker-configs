@@ -1,10 +1,14 @@
 version: "3.3"
 services:
   homepage:
-    image: ghcr.io/benphelps/homepage:main
+    image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
     environment:
       - HOMEPAGE_VAR_SERVER_IP=192.168.31.103
+      - OCTOPI_IP=octopi
+      - HOMEASSISTANT_IP=192.168.31.199
+    env_file:
+      - .env
     ports:
       - 3000:3000
     volumes:

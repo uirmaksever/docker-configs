@@ -5,7 +5,10 @@ services:
     image: docker.getoutline.com/outlinewiki/outline:latest
     env_file: ./docker.env
     ports:
-      - "3010:3000"
+      - "3010:3010"
+    networks:
+      - default
+      - nginx-proxy-manager_default
     depends_on:
       - postgres
       - redis
@@ -14,8 +17,10 @@ services:
   redis:
     image: redis
     env_file: ./docker.env
-    ports:
-      - "6379:6379"
+    # ports:
+    #   - "6379:6379"
+    networks:
+      - default
     volumes:
       - ./redis.conf:/redis.conf
     command: ["redis-server", "/redis.conf"]
@@ -28,10 +33,12 @@ services:
   postgres:
     image: postgres
     env_file: ./docker.env
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
+    networks:
+      - default
     volumes:
-      - database-data:/var/lib/postgresql/data
+      - ./postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready"]
       interval: 30s
@@ -45,10 +52,12 @@ services:
   storage:
     image: minio/minio
     env_file: ./docker.env
-    ports:
-      - "9005:9000"
+    # ports:
+    #   - "9005:9000"
     entrypoint: sh
     command: -c 'minio server'
+    networks:
+      - default
     deploy:
       restart_policy:
         condition: on-failure
@@ -60,29 +69,31 @@ services:
       timeout: 20s
       retries: 3
 
-  https-portal:
-    image: steveltn/https-portal
-    env_file: ./docker.env
-    # ports:
-      # - '80:80'
-      # - '443:443'
-    links:
-      - outline
-      - storage
-    restart: always
-    volumes:
-      - https-portal-data:/var/lib/https-portal
-    healthcheck:
-      test: ["CMD", "service", "nginx", "status"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-    environment:
-      DOMAINS: 'docs.mycompany.com -> http://outline:3000'
-      STAGE: 'production'
-      WEBSOCKET: 'true'
+  # https-portal:
+  #   image: steveltn/https-portal
+  #   env_file: ./docker.env
+  #   # ports:
+  #     # - '80:80'
+  #     # - '443:443'
+  #   networks:
+  #     - default
+  #     - nginx-proxy-manager_default
+  #   links:
+  #     - outline
+  #     - storage
+  #   restart: always
+  #   volumes:
+  #     - https-portal-data:/var/lib/https-portal
+  #   healthcheck:
+  #     test: ["CMD", "service", "nginx", "status"]
+  #     interval: 30s
+  #     timeout: 20s
+  #     retries: 3
+  #   environment:
+  #     DOMAINS: 'docs.umutirmaksever.me -> http://outline:3000'
+  #     STAGE: 'production'
+  #     WEBSOCKET: 'true'
 
-volumes:
-  https-portal-data:
-  # storage-data:
-  database-data:
+networks:
+  nginx-proxy-manager_default:
+    external: true
